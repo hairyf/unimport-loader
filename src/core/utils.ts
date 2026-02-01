@@ -4,12 +4,12 @@ import type { LoaderContext } from 'webpack'
 
 import type { LoaderOptions } from '../types'
 import { writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, isAbsolute, join, relative } from 'node:path'
 
 import { toArray } from '@antfu/utils'
 import { transform } from 'oxc-transform'
 
-import { resolvePreset } from 'unimport'
+import { resolvePreset, stripFileExtension } from 'unimport'
 import { detectIsJsxResource } from '../shared/helpers'
 
 import { logger } from '../shared/logger'
@@ -88,7 +88,26 @@ export async function emitDts(
     return
   }
 
-  const dts = await unimport.generateTypeDeclarations()
+  // d.ts 输出目录：emitFile 时为 webpack output.path，否则为 process.cwd()
+  const ctx = loaderContext as LoaderContext<LoaderOptions> & { _compiler?: { outputPath?: string } }
+  const outputPath = ctx._compiler?.outputPath ?? ctx.rootContext ?? process.cwd()
+  const dtsDir = dirname(join(outputPath, filename))
+
+  const dts = await unimport.generateTypeDeclarations({
+    resolvePath: (i) => {
+      const raw = i.typeFrom ?? i.from
+      const path = stripFileExtension(raw)
+      if (!isAbsolute(path))
+        return path
+      try {
+        const rel = relative(dtsDir, path).replace(/\\/g, '/')
+        return rel.startsWith('.') ? rel : `./${rel}`
+      }
+      catch {
+        return path
+      }
+    },
+  })
   const content = `${[
     '/* eslint-disable */',
     '/* prettier-ignore */',

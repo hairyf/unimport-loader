@@ -1,0 +1,30 @@
+import type { InlinePreset } from 'unimport'
+
+export const solidRouter: InlinePreset = {
+  from: '@solidjs/router',
+  imports: [
+    'A',
+    'HashRouter',
+    'MemoryRouter',
+    'Navigate',
+    'Route',
+    'Router',
+    'action',
+    'createAsync',
+    'createAsyncStore',
+    'query',
+    'revalidate',
+    'useAction',
+    'useSubmission',
+    'useSubmissions',
+    'useBeforeLeave',
+    'useCurrentMatches',
+    'useIsRouting',
+    'useLocation',
+    'useMatch',
+    'useNavigate',
+    'useParams',
+    'usePreloadRoute',
+    'useSearchParams',
+  ],
+}

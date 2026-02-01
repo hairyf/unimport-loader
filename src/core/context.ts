@@ -1,15 +1,29 @@
 import type { SourceMap } from 'magic-string'
+import type { BuiltinPresetName, Preset } from 'unimport'
 import type { LoaderContext } from 'webpack'
 import type { LoaderOptions } from '../types'
 
+import { dirname, isAbsolute, relative } from 'node:path'
+
+import { toArray } from '@antfu/utils'
 import MagicString from 'magic-string'
 import { findStaticImports, parseStaticImport } from 'mlly'
 
 import { createUnimport, stringifyImports, stripCommentsAndStrings } from 'unimport'
+
+import { presets } from '../presets'
 import { detectIsJsxResource } from '../shared/helpers'
 import { logger } from '../shared/logger'
 
 import { emitDts, flattenImports, prepareSourceCode } from './utils'
+
+function resolvePresets(presetInput: LoaderOptions['presets']): (Preset | BuiltinPresetName)[] {
+  return toArray(presetInput).flatMap((p) => {
+    if (typeof p === 'string' && p in presets)
+      return presets[p as keyof typeof presets]
+    return p as Preset | BuiltinPresetName
+  })
+}
 
 export interface Context {
   readonly unimport: ReturnType<typeof createUnimport>
@@ -26,8 +40,20 @@ export async function createContext(options: LoaderOptions): Promise<Context> {
   const unimport = createUnimport({
     imports: await flattenImports(options.imports || []),
     dirs: options.dirs || [],
-    presets: options.presets || [],
+    presets: resolvePresets(options.presets),
     injectAtEnd: true,
+    // dirs 扫描会生成绝对路径，Turbopack 等 bundler 可能无法解析，转为相对路径
+    resolveId: (id, parentId) => {
+      if (!parentId || !isAbsolute(id))
+        return id
+      try {
+        const rel = relative(dirname(parentId), id).replace(/\\/g, '/')
+        return rel.startsWith('.') ? rel : `./${rel}`
+      }
+      catch {
+        return id
+      }
+    },
   })
 
   await unimport.init()

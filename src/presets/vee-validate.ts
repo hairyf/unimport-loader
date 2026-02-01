@@ -1,0 +1,31 @@
+import type { InlinePreset } from 'unimport'
+
+export const veeValidate: InlinePreset = {
+  from: 'vee-validate',
+  imports: [
+    'validate',
+    'defineRule',
+    'configure',
+    'useField',
+    'useForm',
+    'useFieldArray',
+    'useResetForm',
+    'useIsFieldDirty',
+    'useIsFieldTouched',
+    'useIsFieldValid',
+    'useIsSubmitting',
+    'useValidateField',
+    'useIsFormDirty',
+    'useIsFormTouched',
+    'useIsFormValid',
+    'useValidateForm',
+    'useSubmitCount',
+    'useFieldValue',
+    'useFormValues',
+    'useFormErrors',
+    'useFieldError',
+    'useSubmitForm',
+    'FormContextKey',
+    'FieldContextKey',
+  ],
+}

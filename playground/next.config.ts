@@ -1,16 +1,21 @@
 import type { NextConfig } from 'next'
+import type { LoaderOptions } from 'unimport-loader'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
 
-const unimportLoaderOptions = {
+const unimportLoaderOptions: LoaderOptions = {
+  // preset：react, react-dom, react-router, ahooks, jotai, recoil 等，参见 presets from unimport-loader
+  presets: ['react', 'react-dom'],
+  dts: true,
+
+  // dirs: 扫描指定目录，将模块的 named exports 注册为自动导入
+  dirs: ['./composables'],
+
+  // imports: 显式指定要自动导入的 API，支持 npm 包或项目内路径（如 @/）
   imports: [
-    { name: 'useState', from: 'react' },
-    { name: 'useEffect', from: 'react' },
-    { name: 'useCallback', from: 'react' },
-    { name: 'useMemo', from: 'react' },
+    { name: 'useId', from: 'react' },
   ],
-  dts: 'auto-imports.d.ts',
 }
 
 const nextConfig: NextConfig = {
@@ -24,18 +29,6 @@ const nextConfig: NextConfig = {
         ],
       },
     },
-  },
-  webpack(config) {
-    config.module.rules.push({
-      test: /\.(tsx|ts|jsx|js)$/,
-      use: [
-        {
-          loader: require.resolve('unimport-loader'),
-          options: unimportLoaderOptions,
-        },
-      ],
-    })
-    return config
   },
 }
 

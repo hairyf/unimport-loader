@@ -2,9 +2,10 @@
 
 import Image from 'next/image'
 
-// useState 由 unimport-loader 自动注入，无需手写 import
+// useState 来自 preset，useCounter/formatCount/greet 来自 dirs，useId 来自 imports
 export default function Home() {
-  const [count, setCount] = useState(0)
+  const id = useId()
+  const { count, inc, dec } = useCounter(0)
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
@@ -18,18 +19,31 @@ export default function Home() {
         />
         <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
           <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            unimport-loader playground (count:
-            {' '}
-            {count}
-            )
+            {formatCount(count)}
+            {' — '}
+            {greet('unimport')}
           </h1>
-          <button
-            type="button"
-            onClick={() => setCount(c => c + 1)}
-            className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-800"
-          >
-            +1
-          </button>
+          <p className="text-sm text-zinc-500" id={id}>
+            useId (imports):
+            {' '}
+            {id}
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={dec}
+              className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-800"
+            >
+              -1
+            </button>
+            <button
+              type="button"
+              onClick={inc}
+              className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-800"
+            >
+              +1
+            </button>
+          </div>
           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
             Looking for a starting point or more instructions? Head over to
             {' '}
@@ -69,7 +83,7 @@ export default function Home() {
             Deploy Now
           </a>
           <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
+            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/8 px-5 transition-colors hover:border-transparent hover:bg-black/4 dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
             target="_blank"
             rel="noopener noreferrer"

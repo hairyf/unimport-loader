@@ -1,0 +1,30 @@
+import type { InlinePreset } from 'unimport'
+
+export const solidAppRouter: InlinePreset = {
+  from: 'solid-app-router',
+  imports: [
+    'Link',
+    'NavLink',
+    'Navigate',
+    'Outlet',
+    'Route',
+    'Router',
+    'Routes',
+    '_mergeSearchString',
+    'createIntegration',
+    'hashIntegration',
+    'normalizeIntegration',
+    'pathIntegration',
+    'staticIntegration',
+    'useHref',
+    'useIsRouting',
+    'useLocation',
+    'useMatch',
+    'useNavigate',
+    'useParams',
+    'useResolvedPath',
+    'useRouteData',
+    'useRoutes',
+    'useSearchParams',
+  ],
+}

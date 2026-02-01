@@ -1,2 +1,4 @@
 export { default } from './core/loader'
-export type { LoaderOptions } from './types'
+export { presets } from './presets'
+export type { BuiltinPresetName, LoaderOptions, PresetName } from './types'
+export { builtinPresets } from 'unimport'

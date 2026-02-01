@@ -1,0 +1,31 @@
+import type { InlinePreset } from 'unimport'
+
+export const uniApp: InlinePreset = {
+  from: '@dcloudio/uni-app',
+  imports: [
+    'onAddToFavorites',
+    'onBackPress',
+    'onError',
+    'onHide',
+    'onLaunch',
+    'onLoad',
+    'onNavigationBarButtonTap',
+    'onNavigationBarSearchInputChanged',
+    'onNavigationBarSearchInputClicked',
+    'onNavigationBarSearchInputConfirmed',
+    'onNavigationBarSearchInputFocusChanged',
+    'onPageNotFound',
+    'onPageScroll',
+    'onPullDownRefresh',
+    'onReachBottom',
+    'onReady',
+    'onResize',
+    'onShareAppMessage',
+    'onShareTimeline',
+    'onShow',
+    'onTabItemTap',
+    'onThemeChange',
+    'onUnhandledRejection',
+    'onUnload',
+  ],
+}

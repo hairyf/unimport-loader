@@ -29,6 +29,7 @@ catalogs:
     webpack: ^5.104.1
   testing:
     tinyexec: ^1.0.2
+    tinyglobby: ^0.2.15
     vitest: ^4.0.15
     vitest-package-exports: ^0.1.1
     yaml: ^2.8.2

@@ -1,0 +1,209 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`transform > comments.ts 1`] = `
+"import { ref, computed } from 'vue';
+// @ts-nocheck
+/* import { ref } from 'vue' */
+// import { computed } from 'vue'
+
+const a = {
+  rel: 'noreferrer',
+  href: 'https://github.com/antfu/vitesse',
+  target: '_blank',
+}
+
+const foo = ref(0)
+const bar = computed(() => {})
+
+const b = { class: 'text-sm opacity-75' }
+// reactive
+"
+`;
+
+exports[`transform > custom.js 1`] = `
+"import customDefault from 'custom';
+import customDefaultAlias from 'custom';
+import { customNamed } from 'custom';
+// @ts-nocheck
+const a = customDefault(customNamed())
+const b = customDefaultAlias()
+"
+`;
+
+exports[`transform > dollar.js 1`] = `
+"import { $ } from 'vue-dollar';
+// @ts-nocheck
+$('hi')
+"
+`;
+
+exports[`transform > existing.jsx 1`] = `
+"// @ts-nocheck
+import ref from 'ref'
+import { computed } from 'computed'
+
+
+import { watch } from 'vue';
+const a = ref(0)
+const b = computed(0)
+
+watch(a)
+ignored(b)
+"
+`;
+
+exports[`transform > existing2.jsx 1`] = `
+"// @ts-nocheck
+const { ref, computed } = Vue
+
+const a = ref(0)
+const b = computed(0)
+"
+`;
+
+exports[`transform > existing3.jsx 1`] = `
+"// @ts-nocheck
+const [ ref, computed ] = Vue
+
+const a = ref(0)
+const b = computed(0)
+"
+`;
+
+exports[`transform > existing4.jsx 1`] = `
+"// @ts-nocheck
+const [
+  ref,
+  computed
+] = Vue
+
+const a = ref(0)
+const b = computed(0)
+"
+`;
+
+exports[`transform > existing5.jsx 1`] = `
+"// @ts-nocheck
+import {
+  ref,
+  computed,
+  watch as watch3,
+} from 'vue'
+
+
+import { watch } from 'vue';
+const a = ref(0)
+const b = computed(0)
+const c = watch(0)
+const d = watch3(0)
+"
+`;
+
+exports[`transform > existing6.jsx 1`] = `
+"
+import { computed } from 'vue';
+// @ts-nocheck
+const a = computed(() => /^(https?:\\/\\/|\\/\\/)/.test(props.to))
+"
+`;
+
+exports[`transform > glob.ts 1`] = `
+"import { ref } from 'vue';
+// @ts-nocheck
+const modules = import.meta.glob("/src/nested/*.vue");
+const msg = ref("Global Imports");
+"
+`;
+
+exports[`transform > import-all.ts 1`] = `
+"import * as THREE from 'three.js';
+// @ts-nocheck
+const scene = new THREE.Scene();
+"
+`;
+
+exports[`transform > non-target.js 1`] = `
+"// @ts-nocheck
+useNonTarget()
+"
+`;
+
+exports[`transform > props.ts 1`] = `
+"import { toRefs } from 'vue';
+// @ts-nocheck
+const a = z.ref(0)
+console.log({
+  ...toRefs(a)
+})
+"
+`;
+
+exports[`transform > prototype.ts 1`] = `
+"// @ts-nocheck
+const a = Object.keys(b)
+const c = a.toString()
+"
+`;
+
+exports[`transform > react.jsx 1`] = `
+"
+import { useState } from 'react';
+// @ts-nocheck
+export function Component() {
+  const [count, setCount] = useState()
+
+  return <div>{ count }</div>
+}
+"
+`;
+
+exports[`transform > react-existing.jsx 1`] = `
+"// @ts-nocheck
+import React, { useState } from 'react';
+
+export function Component() {
+  const [count, setCount] = useState()
+
+  return <div>{ count }</div>
+}
+"
+`;
+
+exports[`transform > recursive.ts 1`] = `
+"// @ts-nocheck
+export const ref = (obj: any) => {
+  return ref(1)
+}
+"
+`;
+
+exports[`transform > strings.ts 1`] = `
+"// @ts-nocheck
+console.log("ref(0)")
+console.log(\`ref(\${a})\`)
+console.log('ref(\\'z\\')')
+console.log(\`
+ref('z')
+\`)
+"
+`;
+
+exports[`transform > template-literal.ts 1`] = `
+"import { ref } from 'vue';
+// @ts-nocheck
+const z = \`bar-\${ref()}\`
+"
+`;
+
+exports[`transform > vue.js 1`] = `
+"import { useQuasar, useMeta } from 'quasar';
+import { ref } from 'vue';
+import { defineStore, mapState } from 'pinia';
+// @ts-nocheck
+const q = useQuasar()
+const meta = useMeta()
+const a = ref(0)
+const piniaStore = defineStore()
+const piniaMapSate = mapState()
+"
+`;

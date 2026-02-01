@@ -1,0 +1,6 @@
+// @ts-nocheck
+const q = useQuasar()
+const meta = useMeta()
+const a = ref(0)
+const piniaStore = defineStore()
+const piniaMapSate = mapState()

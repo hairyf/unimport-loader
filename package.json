@@ -58,6 +58,7 @@
     "publint": "catalog:cli",
     "simple-git-hooks": "catalog:cli",
     "tinyexec": "catalog:testing",
+    "tinyglobby": "catalog:testing",
     "tsdown": "catalog:cli",
     "tsx": "catalog:cli",
     "typescript": "catalog:cli",

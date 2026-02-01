@@ -12,5 +12,13 @@
     "verbatimModuleSyntax": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
-  }
+  },
+  "exclude": [
+    "test/fixtures",
+    "test/fixtures-*",
+    "node_modules",
+    "dist",
+    "playground",
+    "test/fixtures"
+  ]
 }

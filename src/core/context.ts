@@ -3,7 +3,8 @@ import type { BuiltinPresetName, Preset } from 'unimport'
 import type { LoaderContext } from 'webpack'
 import type { LoaderOptions } from '../types'
 
-import { dirname, isAbsolute, relative } from 'node:path'
+import { dirname, isAbsolute, join, relative } from 'node:path'
+import process from 'node:process'
 
 import { toArray } from '@antfu/utils'
 import MagicString from 'magic-string'
@@ -15,7 +16,7 @@ import { presets } from '../presets'
 import { detectIsJsxResource } from '../shared/helpers'
 import { logger } from '../shared/logger'
 
-import { emitDts, flattenImports, prepareSourceCode } from './utils'
+import { emitDts, flattenImports, generateDtsContent, prepareSourceCode } from './utils'
 
 function resolvePresets(presetInput: LoaderOptions['presets']): (Preset | BuiltinPresetName)[] {
   return toArray(presetInput).flatMap((p) => {
@@ -30,6 +31,8 @@ export interface Context {
   readonly options: LoaderOptions
   transform: (filePath: string, source: string) => Promise<{ code: string, map?: SourceMap } | null>
   emitDts: (loaderContext: LoaderContext<LoaderOptions>) => Promise<void>
+  /** Generate d.ts content (for testing or programmatic use) */
+  generateDts: (file: string) => Promise<string>
 }
 
 export async function createContext(options: LoaderOptions): Promise<Context> {
@@ -123,6 +126,11 @@ export async function createContext(options: LoaderOptions): Promise<Context> {
 
     async emitDts(loaderContext: LoaderContext<LoaderOptions>) {
       await emitDts(unimport, options, loaderContext)
+    },
+
+    async generateDts(file: string) {
+      const dtsDir = dirname(join(process.cwd(), file))
+      return generateDtsContent(unimport, dtsDir)
     },
   }
 }

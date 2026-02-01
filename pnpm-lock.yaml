@@ -65,6 +65,9 @@ catalogs:
     tinyexec:
       specifier: ^1.0.2
       version: 1.0.2
+    tinyglobby:
+      specifier: ^0.2.15
+      version: 0.2.15
     vitest:
       specifier: ^4.0.15
       version: 4.0.15
@@ -129,6 +132,9 @@ importers:
       tinyexec:
         specifier: catalog:testing
         version: 1.0.2
+      tinyglobby:
+        specifier: catalog:testing
+        version: 0.2.15
       tsdown:
         specifier: catalog:cli
         version: 0.17.3(publint@0.3.16)(synckit@0.11.11)(typescript@5.9.3)

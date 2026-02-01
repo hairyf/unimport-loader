@@ -2,7 +2,10 @@ import type { LoaderContext } from 'webpack'
 
 import type { LoaderOptions } from '../types'
 
+import { createRequire } from 'node:module'
 import { createContext } from './context'
+
+const require = createRequire(import.meta.url)
 
 export default async function loader(this: LoaderContext<LoaderOptions>, source: string): Promise<void | string> {
   const callback = this.async()
@@ -29,5 +32,12 @@ export default async function loader(this: LoaderContext<LoaderOptions>, source:
     else {
       return callback(new Error(String(err)))
     }
+  }
+}
+
+export function unimport(options: LoaderOptions) {
+  return {
+    loader: require.resolve('unimport-loader'),
+    options,
   }
 }

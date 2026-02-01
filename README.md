@@ -6,7 +6,7 @@
 [![JSDocs][jsdocs-src]][jsdocs-href]
 [![License][license-src]][license-href]
 
-A Webpack loader that injects auto-imports using [unimport](https://github.com/unjs/unimport).
+A loader that injects auto-imports using [unimport](https://github.com/unjs/unimport). Supports **Turbopack** (Next.js) and **Webpack**.
 
 ## Install
 
@@ -15,6 +15,42 @@ pnpm add -D unimport-loader
 ```
 
 ## Usage
+
+### Turbopack (Next.js)
+
+在 `next.config.ts` 中配置 `turbopack.rules`，使用 `unimport()` 作为 loader：
+
+```ts
+// next.config.ts
+import type { NextConfig } from 'next'
+import { unimport } from 'unimport-loader'
+
+const nextConfig: NextConfig = {
+  turbopack: {
+    rules: {
+      '*.{tsx,ts,jsx,js}': {
+        condition: { not: 'foreign' },
+        loaders: [
+          unimport({
+            presets: ['react', 'react-dom'],
+            dts: true,
+            dirs: ['./composables'],
+            imports: [
+              { name: 'useId', from: 'react' },
+            ],
+          }),
+        ],
+      },
+    },
+  },
+}
+
+export default nextConfig
+```
+
+启用 Turbopack 开发：`next dev --turbopack`。
+
+### Webpack
 
 ```js
 // webpack.config.js

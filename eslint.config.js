@@ -7,6 +7,8 @@ export default antfu(
     pnpm: true,
     rules: {
       'ts/explicit-function-return-type': 'off',
+      'pnpm/json-enforce-catalog': 'off',
+      'pnpm/yaml-enforce-settings': 'off',
     },
   },
 )

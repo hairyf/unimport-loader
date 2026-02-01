@@ -6,7 +6,52 @@
 [![JSDocs][jsdocs-src]][jsdocs-href]
 [![License][license-src]][license-href]
 
-Webpack loader for unimport.
+A Webpack loader that injects auto-imports using [unimport](https://github.com/unjs/unimport).
+
+## Install
+
+```bash
+pnpm add -D unimport-loader
+```
+
+## Usage
+
+```js
+// webpack.config.js
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.(js|ts|jsx|tsx)$/,
+        use: [
+          {
+            loader: 'unimport-loader',
+            options: {
+              imports: [
+                { name: 'ref', from: 'vue' },
+                { name: 'computed', from: 'vue' },
+              ],
+              // or use presets
+              presets: ['vue'],
+              dts: true, // emit auto-imports.d.ts
+            },
+          },
+        ],
+      },
+    ],
+  },
+}
+```
+
+## Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `imports` | `Arrayable<Import \| ImportsMap \| InlinePreset>` | Import definitions |
+| `dirs` | `string[]` | Auto-import from directories |
+| `presets` | `Preset[]` | Use unimport presets (e.g. `['vue']`) |
+| `dts` | `string \| boolean` | Emit type declarations; `true` -> `auto-imports.d.ts` |
+| `logLevel` | `LogLevel` | [consola](https://github.com/unjs/consola#log-level) log level |
 
 ## Note for Developers
 

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-describe('should', () => {
-  it('exported', () => {
-    expect(1).toEqual(1)
+import loader from '../src'
+
+describe('unimport-loader', () => {
+  it('exports loader as default', () => {
+    expect(typeof loader).toBe('function')
   })
 })

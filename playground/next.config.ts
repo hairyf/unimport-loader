@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
             imports: [
               { name: 'useId', from: 'react' },
             ],
+            logLevel: +999
           })
         ],
       },

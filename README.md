@@ -18,7 +18,7 @@ pnpm add -D unimport-loader
 
 ### Turbopack (Next.js)
 
-在 `next.config.ts` 中配置 `turbopack.rules`，使用 `unimport()` 作为 loader：
+Configure `turbopack.rules` in `next.config.ts` and use `unimport()` as a loader:
 
 ```ts
 // next.config.ts
@@ -48,7 +48,7 @@ const nextConfig: NextConfig = {
 export default nextConfig
 ```
 
-启用 Turbopack 开发：`next dev --turbopack`。
+Run dev with Turbopack: `next dev --turbopack`.
 
 ### Webpack
 

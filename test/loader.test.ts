@@ -45,8 +45,7 @@ console.log(foo)`)
     const options = { imports: [{ name: 'useState', from: 'react' }] }
     const src = 'function Comp(){ const [s, setS] = useState(0); return <div>{s}</div> }'
     const { code } = await runLoader(src, options, '/test/file.jsx')
-    expect(code).toBe(`
-import { useState } from 'react';
+    expect(code).toBe(`import { useState } from 'react';
 function Comp(){ const [s, setS] = useState(0); return <div>{s}</div> }`)
   })
 
@@ -54,8 +53,7 @@ function Comp(){ const [s, setS] = useState(0); return <div>{s}</div> }`)
     const options = { imports: [{ name: 'useState', from: 'react' }] }
     const src = 'function Comp(): JSX.Element { const [s, setS] = useState(0); return <div>{s}</div> }'
     const { code } = await runLoader(src, options, '/test/file.tsx')
-    expect(code).toBe(`
-import { useState } from 'react';
+    expect(code).toBe(`import { useState } from 'react';
 function Comp(): JSX.Element { const [s, setS] = useState(0); return <div>{s}</div> }`)
   })
 

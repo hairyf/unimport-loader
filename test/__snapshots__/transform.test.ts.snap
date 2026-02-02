@@ -100,8 +100,7 @@ const d = watch3(0)
 `;
 
 exports[`transform > existing6.jsx 1`] = `
-"
-import { computed } from 'vue';
+"import { computed } from 'vue';
 // @ts-nocheck
 const a = computed(() => /^(https?:\\/\\/|\\/\\/)/.test(props.to))
 "
@@ -146,8 +145,7 @@ const c = a.toString()
 `;
 
 exports[`transform > react.jsx 1`] = `
-"
-import { useState } from 'react';
+"import { useState } from 'react';
 // @ts-nocheck
 export function Component() {
   const [count, setCount] = useState()

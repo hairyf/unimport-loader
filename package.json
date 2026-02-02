@@ -45,7 +45,6 @@
     "consola": "catalog:deps",
     "magic-string": "catalog:deps",
     "mlly": "catalog:deps",
-    "oxc-transform": "catalog:deps",
     "unimport": "catalog:deps"
   },
   "devDependencies": {

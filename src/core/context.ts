@@ -10,21 +10,15 @@ import { toArray } from '@antfu/utils'
 import MagicString from 'magic-string'
 import { findStaticImports, parseStaticImport } from 'mlly'
 
-import { createUnimport, stringifyImports, stripCommentsAndStrings } from 'unimport'
+import { createUnimport } from 'unimport'
 
 import { presets } from '../presets'
-import { detectIsJsxResource } from '../shared/helpers'
 import { logger } from '../shared/logger'
 
-import { emitDts, flattenImports, generateDtsContent, prepareSourceCode } from './utils'
+import { emitDts, flattenImports, generateDtsContent } from './utils'
 
 /** Match 'use client' | 'use server' | 'use strict' at file start (Next.js / React Server Components) */
 const DIRECTIVE_RE = /^\s*['"]use\s+(?:client|server|strict)['"]\s*;?\s*/
-
-function getDirectiveEndIndex(source: string): number {
-  const match = source.match(DIRECTIVE_RE)
-  return match ? match[0].length : 0
-}
 
 /** Ensure directive like 'use client' stays first, before imports (required by Next.js) */
 function ensureDirectiveFirst(source: string, code: string): string {
@@ -154,7 +148,7 @@ export async function createContext(options: LoaderOptions): Promise<Context> {
 
   await unimport.init()
 
-  async function transformRegularFile(filePath: string, source: string) {
+  async function transformFile(filePath: string, source: string) {
     const content = new MagicString(source)
     const result = await unimport.injectImports(content, filePath)
 
@@ -170,59 +164,12 @@ export async function createContext(options: LoaderOptions): Promise<Context> {
     }
   }
 
-  async function transformJsxFile(filePath: string, source: string) {
-    const normalizedSource = await prepareSourceCode(filePath, source)
-    const normalizedContent = new MagicString(normalizedSource)
-    const result = await unimport.injectImports(normalizedContent, filePath)
-
-    if (!result.s.hasChanged()) {
-      return null
-    }
-
-    const originalContent = new MagicString(source)
-    const { isCJSContext, firstOccurrence } = await unimport.detectImports(originalContent)
-    const strippedCode = stripCommentsAndStrings(originalContent.original)
-
-    let insertionIndex = findStaticImports(originalContent.original)
-      .filter(i => Boolean(strippedCode.slice(i.start, i.end).trim()))
-      .map(i => parseStaticImport(i))
-      .reverse()
-      .find(i => i.end <= firstOccurrence)
-      ?.end ?? 0
-    if (insertionIndex === 0) {
-      const directiveEnd = getDirectiveEndIndex(originalContent.original)
-      if (directiveEnd > 0)
-        insertionIndex = directiveEnd
-    }
-
-    const filteredImports = filterDuplicateImports(result.imports, filePath, source)
-    if (filteredImports.length === 0)
-      return null
-    const importStatements = stringifyImports(filteredImports, isCJSContext)
-    if (importStatements && insertionIndex >= 0) {
-      originalContent.appendRight(insertionIndex, `\n${importStatements}\n`)
-    }
-    else if (importStatements) {
-      originalContent.prepend(`${importStatements}\n`)
-    }
-
-    logger.info(`Injected imports for ${filePath}`)
-    return {
-      code: originalContent.toString(),
-      map: originalContent.generateMap({ source: filePath, includeContent: true, hires: true }),
-    }
-  }
-
   return {
     unimport,
     options,
 
     async transform(filePath: string, source: string) {
-      const isJSX = detectIsJsxResource(filePath)
-      const result = isJSX
-        ? await transformJsxFile(filePath, source)
-        : await transformRegularFile(filePath, source)
-
+      const result = await transformFile(filePath, source)
       return result || { code: source }
     },
 

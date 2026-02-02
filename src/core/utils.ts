@@ -7,10 +7,8 @@ import { writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative } from 'node:path'
 
 import { toArray } from '@antfu/utils'
-import { transform } from 'oxc-transform'
 
 import { resolvePreset, stripFileExtension } from 'unimport'
-import { detectIsJsxResource } from '../shared/helpers'
 
 import { logger } from '../shared/logger'
 
@@ -50,23 +48,6 @@ export async function flattenImports(importsConfig: LoaderOptions['imports']): P
     }))
 
   return promises.flat()
-}
-
-/**
- * Prepare source code for import detection by transforming JSX/TSX if needed
- */
-export async function prepareSourceCode(filePath: string, source: string): Promise<string> {
-  const isJSX = detectIsJsxResource(filePath)
-  if (!isJSX) {
-    return source
-  }
-
-  const result = await transform(filePath, source, {
-    lang: filePath.endsWith('.tsx') ? 'tsx' : 'jsx',
-    jsx: { runtime: 'classic' },
-    sourcemap: false,
-  })
-  return result.code
 }
 
 /**

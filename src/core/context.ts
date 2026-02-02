@@ -3,7 +3,7 @@ import type { BuiltinPresetName, Preset } from 'unimport'
 import type { LoaderContext } from 'webpack'
 import type { LoaderOptions } from '../types'
 
-import { dirname, isAbsolute, join, relative } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import process from 'node:process'
 
 import { toArray } from '@antfu/utils'
@@ -46,6 +46,60 @@ function ensureDirectiveFirst(source: string, code: string): string {
   return `${directive}${sep}${beforeDir}\n\n${afterDir}`
 }
 
+/** Collect all imported names (default + named) from existing static imports */
+function getExistingImportedNames(source: string): Set<string> {
+  const names = new Set<string>()
+  const imports = findStaticImports(source)
+  for (const imp of imports) {
+    try {
+      const parsed = parseStaticImport(imp)
+      if (parsed.defaultImport)
+        names.add(parsed.defaultImport)
+      if (parsed.namespacedImport)
+        names.add(parsed.namespacedImport)
+      if (parsed.namedImports) {
+        for (const alias of Object.values(parsed.namedImports))
+          names.add(alias)
+      }
+    }
+    catch {
+      // ignore parse errors
+    }
+  }
+  return names
+}
+
+/** Check if two paths resolve to the same file (for self-import detection) */
+function isSameFile(filePath: string, importFrom: string): boolean {
+  try {
+    const absFile = resolve(filePath)
+    const absImport = isAbsolute(importFrom)
+      ? resolve(importFrom)
+      : resolve(dirname(filePath), importFrom)
+    return absFile === absImport
+  }
+  catch {
+    return false
+  }
+}
+
+/** Filter out imports that would cause "defined multiple times" (already imported or self-import) */
+function filterDuplicateImports(
+  imports: Array<{ name: string, as?: string, from: string }>,
+  filePath: string,
+  source: string,
+): Array<{ name: string, as?: string, from: string }> {
+  const existingNames = getExistingImportedNames(source)
+  return imports.filter((i) => {
+    const as = i.as ?? i.name
+    if (existingNames.has(as))
+      return false
+    if (isSameFile(filePath, i.from))
+      return false
+    return true
+  })
+}
+
 function resolvePresets(presetInput: LoaderOptions['presets']): (Preset | BuiltinPresetName)[] {
   return toArray(presetInput).flatMap((p) => {
     if (typeof p === 'string' && p in presets)
@@ -68,11 +122,22 @@ export async function createContext(options: LoaderOptions): Promise<Context> {
     logger.level = options.logLevel
   }
 
+  const dedupeAddon = {
+    name: 'unimport-loader:dedupe',
+    injectImportsResolved(imports: Array<{ name: string, as?: string, from: string }>, s: MagicString, id?: string) {
+      if (!id)
+        return imports
+      const source = typeof s.original === 'string' ? s.original : s.toString()
+      return filterDuplicateImports(imports, id, source)
+    },
+  }
+
   const unimport = createUnimport({
     imports: await flattenImports(options.imports || []),
     dirs: options.dirs || [],
     presets: resolvePresets(options.presets),
     injectAtEnd: true,
+    addons: [dedupeAddon],
     // dirs 扫描会生成绝对路径，Turbopack 等 bundler 可能无法解析，转为相对路径
     resolveId: (id, parentId) => {
       if (!parentId || !isAbsolute(id))
@@ -130,11 +195,14 @@ export async function createContext(options: LoaderOptions): Promise<Context> {
         insertionIndex = directiveEnd
     }
 
-    const importStatements = stringifyImports(result.imports, isCJSContext)
+    const filteredImports = filterDuplicateImports(result.imports, filePath, source)
+    if (filteredImports.length === 0)
+      return null
+    const importStatements = stringifyImports(filteredImports, isCJSContext)
     if (importStatements && insertionIndex >= 0) {
       originalContent.appendRight(insertionIndex, `\n${importStatements}\n`)
     }
-    else {
+    else if (importStatements) {
       originalContent.prepend(`${importStatements}\n`)
     }
 

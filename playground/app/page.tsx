@@ -91,6 +91,9 @@ export default function Home() {
             Documentation
           </a>
         </div>
+        {greet('page')}
+        {greet('page 2')}
+        {greet('page 3')}
       </main>
     </div>
   )

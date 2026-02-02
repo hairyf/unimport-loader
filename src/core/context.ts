@@ -3,7 +3,7 @@ import type { BuiltinPresetName, Preset } from 'unimport'
 import type { LoaderContext } from 'webpack'
 import type { LoaderOptions } from '../types'
 
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, join, relative } from 'node:path'
 import process from 'node:process'
 
 import { toArray } from '@antfu/utils'
@@ -17,6 +17,34 @@ import { detectIsJsxResource } from '../shared/helpers'
 import { logger } from '../shared/logger'
 
 import { emitDts, flattenImports, generateDtsContent, prepareSourceCode } from './utils'
+
+/** Match 'use client' | 'use server' | 'use strict' at file start (Next.js / React Server Components) */
+const DIRECTIVE_RE = /^\s*['"]use\s+(?:client|server|strict)['"]\s*;?\s*/
+
+function getDirectiveEndIndex(source: string): number {
+  const match = source.match(DIRECTIVE_RE)
+  return match ? match[0].length : 0
+}
+
+/** Ensure directive like 'use client' stays first, before imports (required by Next.js) */
+function ensureDirectiveFirst(source: string, code: string): string {
+  const directiveMatch = source.match(DIRECTIVE_RE)
+  if (!directiveMatch)
+    return code
+  const directive = directiveMatch[0]
+  const directiveStr = directive.trim()
+  if (code.trimStart().startsWith(directiveStr))
+    return code
+  if (!code.trimStart().startsWith('import'))
+    return code
+  const dirIndex = code.indexOf(directiveStr)
+  if (dirIndex < 0)
+    return code
+  const beforeDir = code.slice(0, dirIndex).trim()
+  const afterDir = code.slice(dirIndex + directiveStr.length).trimStart()
+  const sep = directive.endsWith('\n') ? '\n' : '\n\n'
+  return `${directive}${sep}${beforeDir}\n\n${afterDir}`
+}
 
 function resolvePresets(presetInput: LoaderOptions['presets']): (Preset | BuiltinPresetName)[] {
   return toArray(presetInput).flatMap((p) => {
@@ -45,16 +73,11 @@ export async function createContext(options: LoaderOptions): Promise<Context> {
     dirs: options.dirs || [],
     presets: resolvePresets(options.presets),
     injectAtEnd: true,
-    // dirs 扫描会生成绝对路径，Turbopack 等 bundler 可能无法解析，转为相对路径。
-    // 当解析目标与当前文件相同时返回 parentId，以便 unimport 过滤自引用，避免 "defined multiple times"。
+    // dirs 扫描会生成绝对路径，Turbopack 等 bundler 可能无法解析，转为相对路径
     resolveId: (id, parentId) => {
       if (!parentId || !isAbsolute(id))
         return id
       try {
-        const absId = resolve(id)
-        const absParent = resolve(parentId)
-        if (absId === absParent)
-          return parentId
         const rel = relative(dirname(parentId), id).replace(/\\/g, '/')
         return rel.startsWith('.') ? rel : `./${rel}`
       }
@@ -75,8 +98,9 @@ export async function createContext(options: LoaderOptions): Promise<Context> {
     }
 
     logger.info(`Injected imports for ${filePath}`)
+    const code = ensureDirectiveFirst(source, result.s.toString())
     return {
-      code: result.s.toString(),
+      code,
       map: result.s.generateMap({ source: filePath, includeContent: true, hires: true }),
     }
   }
@@ -94,12 +118,17 @@ export async function createContext(options: LoaderOptions): Promise<Context> {
     const { isCJSContext, firstOccurrence } = await unimport.detectImports(originalContent)
     const strippedCode = stripCommentsAndStrings(originalContent.original)
 
-    const insertionIndex = findStaticImports(originalContent.original)
+    let insertionIndex = findStaticImports(originalContent.original)
       .filter(i => Boolean(strippedCode.slice(i.start, i.end).trim()))
       .map(i => parseStaticImport(i))
       .reverse()
       .find(i => i.end <= firstOccurrence)
       ?.end ?? 0
+    if (insertionIndex === 0) {
+      const directiveEnd = getDirectiveEndIndex(originalContent.original)
+      if (directiveEnd > 0)
+        insertionIndex = directiveEnd
+    }
 
     const importStatements = stringifyImports(result.imports, isCJSContext)
     if (importStatements && insertionIndex >= 0) {

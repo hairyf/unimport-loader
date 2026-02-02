@@ -1,3 +1,5 @@
+/* eslint-disable regexp/no-super-linear-backtracking */
+/* eslint-disable regexp/optimal-quantifier-concatenation */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -101,6 +103,77 @@ const count: Ref<number> = ref(0)`)
     const src = 'const count = 0'
     const { code } = await runLoader(src, options)
     expect(code).toBe(src)
+  })
+
+  it('keeps "use client" directive first when auto-importing (TSX)', async () => {
+    const options = { imports: [{ name: 'useState', from: 'react' }] }
+    const src = `'use client'
+
+export default function Comp() {
+  const [s, setS] = useState(0)
+  return <div>{s}</div>
+}`
+    const { code } = await runLoader(src, options, '/test/file.tsx')
+    expect(code).toMatch(/^'use client'\s*\n+\s*import \{ useState \} from 'react'/)
+    expect(code).not.toMatch(/^import.*'use client'/m)
+  })
+
+  it('keeps "use client" directive first when auto-importing (TS with no existing imports)', async () => {
+    const options = { imports: [{ name: 'foo', from: 'bar' }] }
+    const src = `'use client'
+
+export function useFoo() {
+  return foo()
+}`
+    const { code } = await runLoader(src, options, '/test/file.ts')
+    expect(code).toMatch(/^'use client'\s*\n+\s*import \{ foo \} from 'bar'/)
+    expect(code).not.toMatch(/^import.*'use client'/m)
+  })
+
+  it('keeps "use client" first with multiple auto-injected imports (TSX)', async () => {
+    const options = {
+      imports: [
+        { name: 'useState', from: 'react' },
+        { name: 'useEffect', from: 'react' },
+      ],
+    }
+    const src = `'use client'
+
+export default function Comp() {
+  const [s, setS] = useState(0)
+  useEffect(() => {}, [])
+  return <div>{s}</div>
+}`
+    const { code } = await runLoader(src, options, '/test/file.tsx')
+    expect(code).toMatch(/^'use client'\s*\n+\s*import /)
+    expect(code).toMatch(/import \{ useState, useEffect \} from 'react'|import \{ useEffect, useState \} from 'react'/)
+    expect(code).not.toMatch(/^import.*'use client'/m)
+  })
+
+  it('keeps "use client" first with existing imports + auto-injected imports (TSX)', async () => {
+    const options = { imports: [{ name: 'useState', from: 'react' }] }
+    const src = `'use client'
+
+import Image from 'next/image'
+
+export default function Comp() {
+  const [s, setS] = useState(0)
+  return (
+    <div>
+      <Image src="/x" alt="x" width={1} height={1} />
+      {s}
+    </div>
+  )
+}`
+    const { code } = await runLoader(src, options, '/test/file.tsx')
+    expect(code).toMatch(/^'use client'\s*\n+/)
+    expect(code).toMatch(/import Image from 'next\/image'/)
+    expect(code).toMatch(/import \{ useState \} from 'react'/)
+    const useClientPos = code.indexOf('\'use client\'')
+    const imageImportPos = code.indexOf('import Image')
+    const useStateImportPos = code.indexOf('import { useState }')
+    expect(useClientPos).toBeLessThan(imageImportPos)
+    expect(useClientPos).toBeLessThan(useStateImportPos)
   })
 
   it('does not inject self-import when transforming file that defines the symbol (dirs)', async () => {

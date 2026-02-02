@@ -3,7 +3,7 @@ import type { BuiltinPresetName, Preset } from 'unimport'
 import type { LoaderContext } from 'webpack'
 import type { LoaderOptions } from '../types'
 
-import { dirname, isAbsolute, join, relative } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import process from 'node:process'
 
 import { toArray } from '@antfu/utils'
@@ -45,11 +45,16 @@ export async function createContext(options: LoaderOptions): Promise<Context> {
     dirs: options.dirs || [],
     presets: resolvePresets(options.presets),
     injectAtEnd: true,
-    // dirs 扫描会生成绝对路径，Turbopack 等 bundler 可能无法解析，转为相对路径
+    // dirs 扫描会生成绝对路径，Turbopack 等 bundler 可能无法解析，转为相对路径。
+    // 当解析目标与当前文件相同时返回 parentId，以便 unimport 过滤自引用，避免 "defined multiple times"。
     resolveId: (id, parentId) => {
       if (!parentId || !isAbsolute(id))
         return id
       try {
+        const absId = resolve(id)
+        const absParent = resolve(parentId)
+        if (absId === absParent)
+          return parentId
         const rel = relative(dirname(parentId), id).replace(/\\/g, '/')
         return rel.startsWith('.') ? rel : `./${rel}`
       }

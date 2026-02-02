@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import loader from '../src'
@@ -99,5 +101,14 @@ const count: Ref<number> = ref(0)`)
     const src = 'const count = 0'
     const { code } = await runLoader(src, options)
     expect(code).toBe(src)
+  })
+
+  it('does not inject self-import when transforming file that defines the symbol (dirs)', async () => {
+    const hooksDir = resolve(__dirname, 'fixtures', 'hooks')
+    const useScopePath = resolve(hooksDir, 'use-scope.ts')
+    const source = readFileSync(useScopePath, 'utf-8')
+    const { code } = await runLoader(source, { dirs: [hooksDir] }, useScopePath)
+    expect(code).toBe(source)
+    expect(code).not.toMatch(/import\s*\{\s*useScope\s*\}\s*from/)
   })
 })

@@ -13,9 +13,14 @@ import { findStaticImports, parseStaticImport } from 'mlly'
 import { createUnimport } from 'unimport'
 
 import { presets } from '../presets'
+import { detectIsJsxResource, getJsxComponentTagNames } from '../shared/helpers'
 import { logger } from '../shared/logger'
 
 import { emitDts, flattenImports, generateDtsContent } from './utils'
+
+/** 注入并随后移除，用于让 unimport 识别 JSX 中的组件名 */
+const JSX_REFS_SENTINEL = '__unimport_loader_jsx'
+const JSX_REFS_LINE_RE = /\/\* __unimport_loader_jsx \*\/[^\n]*\n?/g
 
 /** Match 'use client' | 'use server' | 'use strict' at file start (Next.js / React Server Components) */
 const DIRECTIVE_RE = /^\s*['"]use\s+(?:client|server|strict)['"]\s*;?\s*/
@@ -149,15 +154,29 @@ export async function createContext(options: LoaderOptions): Promise<Context> {
   await unimport.init()
 
   async function transformFile(filePath: string, source: string) {
-    const content = new MagicString(source)
+    let refsLine = ''
+    let input = source
+    if (detectIsJsxResource(filePath)) {
+      const tagNames = getJsxComponentTagNames(source)
+      if (tagNames.length > 0) {
+        refsLine = `/* ${JSX_REFS_SENTINEL} */ void (${tagNames.join(', ')});\n`
+        input = refsLine + input
+      }
+    }
+
+    const content = new MagicString(input)
     const result = await unimport.injectImports(content, filePath)
 
     if (!result.s.hasChanged()) {
       return null
     }
 
+    let code = result.s.toString()
+    if (refsLine)
+      code = code.replace(refsLine, '').replace(JSX_REFS_LINE_RE, '') // 精确移除 + 正则兜底
+
     logger.info(`Injected imports for ${filePath}`)
-    const code = ensureDirectiveFirst(source, result.s.toString())
+    code = ensureDirectiveFirst(source, code)
     return {
       code,
       map: result.s.generateMap({ source: filePath, includeContent: true, hires: true }),

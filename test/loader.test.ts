@@ -49,6 +49,28 @@ console.log(foo)`)
 function Comp(){ const [s, setS] = useState(0); return <div>{s}</div> }`)
   })
 
+  it('injects import for JSX component like <Button>', async () => {
+    const options = {
+      imports: [
+        { name: 'Button', from: './components/Button' },
+        { name: 'useState', from: 'react' },
+      ],
+    }
+    const src = `export function App() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div>
+      <Button onClick={() => setOpen(true)}>Click me</Button>
+    </div>
+  )
+}`
+    const { code } = await runLoader(src, options, '/test/App.jsx')
+    expect(code).toMatch(/import \{ Button \} from '\.\/components\/Button'/)
+    expect(code).toMatch(/import \{ useState \} from 'react'/)
+    expect(code).toContain('<Button onClick')
+    expect(code).toContain('>Click me</Button>')
+  })
+
   it('handles TSX files', async () => {
     const options = { imports: [{ name: 'useState', from: 'react' }] }
     const src = 'function Comp(): JSX.Element { const [s, setS] = useState(0); return <div>{s}</div> }'
